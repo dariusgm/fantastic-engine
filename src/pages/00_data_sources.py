@@ -19,7 +19,7 @@ if source == "CSV":
     if st.button("Register Table", key="register_table"):
         df = pd.read_csv(csv_file)
         table_name = csv_file.split(os.sep)[-1].replace(".csv", "")
-        with get_database() as con:
+        with duckdb.connect("database.duckdb", read_only=False) as con:
             con.execute(f"CREATE TABLE {table_name} AS SELECT * FROM df")
             result = con.execute(f"SELECT COUNT(*) as CNT FROM {table_name}").fetchone()
             for r in result:

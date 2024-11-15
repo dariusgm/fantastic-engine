@@ -14,11 +14,6 @@ with duckdb.connect("database.duckdb", read_only=True) as con:
     options = tables['table_name'].tolist()
 
     table_name = st.selectbox("Select a Table", options, key="table")
-    select_query = f"SELECT * FROM '{table_name}' LIMIT 100"
-    st.code(body=select_query, language="sql")
-    result = con.execute(select_query).fetchdf()
-    st.dataframe(result, key="query_result")
-
 
     # Query to get table types
     query = f"""
@@ -50,8 +45,18 @@ with duckdb.connect("database.duckdb", read_only=True) as con:
         return type_map[x]
 
     selected_column = st.selectbox("Select a column", numerical + categorical, key="column", format_func=get_type_map)
-    st.write(f"Selected column: {selected_column}")
-    st.write(f"Column type: {column_type}")
+    if selected_column in categorical:
+        query = f"SELECT {selected_column}, COUNT(*) as CNT FROM {table_name} GROUP BY {selected_column}"
+        result = con.execute(query).fetchdf()
+        st.dataframe(result)
+    elif selected_column in numerical:
+        query = (f"SELECT "
+                 f"AVG({selected_column}) as avg, "
+                 f"MIN({selected_column}) as min, "
+                 f"MAX({selected_column}) as max "
+                 f"FROM {table_name}")
+        result = con.execute(query).fetchdf()
+        st.dataframe(result)
 
 
 
